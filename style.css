@@ -10,6 +10,10 @@ body {
 	font-family: "Sono", sans-serif;
 	padding: 48px;
 }
+.hidden {
+	display: none !important;
+	/* otherwise, this will not be overridden by other written after this in this file, e.g. fact-form */
+}
 /* MAIN LAYOUT */
 .container {
 	max-width: 1500px;
