@@ -38,7 +38,7 @@
 				<h1>Today I Learned</h1>
 			</div>
 
-			<button>Share a fact</button>
+			<button class="btn btn-large">Share a fact</button>
 		</header>
 
 		<form class="fact-form">
@@ -57,17 +57,40 @@
 				<option value="science">Science</option>
 				<option value="society">Society</option>
 			</select>
-			<button>Post</button>
+			<button class="btn btn-large">Post</button>
 		</form>
 		<div class="container">
 			<main class="main">
 				<!-- secondary component - semantic meaning -->
 				<aside>
 					<ul>
-						<li><button>All</button></li>
-						<li><button>Technology</button></li>
-						<li><button>Science</button></li>
-						<li><button>Society</button></li>
+						<li class="category">
+							<button class="btn btn-all-categories">All</button>
+						</li>
+						<li class="category">
+							<button
+								class="btn btn-category"
+								style="background-color: #3b82f6"
+							>
+								Technology
+							</button>
+						</li>
+						<li class="category">
+							<button
+								class="btn btn-category"
+								style="background-color: #16a34a"
+							>
+								Science
+							</button>
+						</li>
+						<li class="category">
+							<button
+								class="btn btn-category"
+								style="background-color: #eab308"
+							>
+								Society
+							</button>
+						</li>
 					</ul>
 				</aside>
 				<section>

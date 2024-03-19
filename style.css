@@ -47,6 +47,9 @@ body {
 	width: 68px;
 }
 
+.category {
+	margin-bottom: 16px;
+}
 h1 {
 	font-size: 42px;
 	text-transform: uppercase;
@@ -90,9 +93,35 @@ ul {
 	color: #a8a29e;
 	text-decoration: none;
 	margin-left: 12px;
+	transition: 0.3s;
 }
 .source:hover,
 .source:active {
 	color: #3b82f6;
 }
-\
+.btn {
+	border: none;
+	font-family: "Coiny", sans-serif;
+	line-height: 1;
+	text-transform: uppercase;
+	font-size: 17px;
+	padding: 16px 0 13px;
+	background-image: linear-gradient(135deg, #3b82f6, #ef4444, #16a34a, #eab308);
+	color: inherit;
+}
+
+/* css override from bottom to top */
+.btn-large {
+	font-size: 30px;
+	padding: 20px 32px 17px;
+}
+
+.btn-all-categories {
+	margin-bottom: 16px;
+	width: 100%;
+}
+
+.btn-category {
+	width: 100%;
+	background-image: none;
+}
