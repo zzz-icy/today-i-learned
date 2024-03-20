@@ -1,11 +1,17 @@
 import "./style.css"
-import { CATEGORIES, initialFacts } from "./data"
-import { useState } from "react"
-
+import { CATEGORIES } from "./data"
+import { useEffect, useState } from "react"
+import supabase from "./supabase"
 function App() {
 	const [showForm, setShowForm] = useState(false)
-	const [facts, setFacts] = useState(initialFacts)
-
+	const [facts, setFacts] = useState([])
+	useEffect(() => {
+		const getFacts = async () => {
+			let { data: facts, error } = await supabase.from("facts").select("*")
+			setFacts(facts)
+		}
+		getFacts()
+	}, [])
 	return (
 		<>
 			{/* HEADER */}
@@ -198,7 +204,7 @@ const Fact = ({ data }) => {
 				style={{
 					backgroundColor: CATEGORIES.find(
 						(category) => category.name === data.category
-					).color,
+					)?.color,
 				}}
 			>
 				{data.category}
