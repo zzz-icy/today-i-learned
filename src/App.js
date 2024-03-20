@@ -5,11 +5,23 @@ import supabase from "./supabase"
 function App() {
 	const [showForm, setShowForm] = useState(false)
 	const [facts, setFacts] = useState([])
-	useEffect(() => {
-		const getFacts = async () => {
-			let { data: facts, error } = await supabase.from("facts").select("*")
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState(undefined)
+	const getFacts = async () => {
+		setIsLoading(true)
+		let { data: facts, error } = await supabase
+			.from("facts")
+			.select("*")
+			.order("created_at", { ascending: false })
+			.limit(1000)
+		if (!error) {
 			setFacts(facts)
+		} else {
+			setError(error)
 		}
+		setIsLoading(false)
+	}
+	useEffect(() => {
 		getFacts()
 	}, [])
 	return (
@@ -27,11 +39,37 @@ function App() {
 			) : null}
 			<main className='main'>
 				<CategoryFilter />
-				<FactList facts={facts} />
+				{isLoading ? (
+					<Loader />
+				) : error ? (
+					<Retry getFacts={getFacts} />
+				) : (
+					<FactList facts={facts} />
+				)}
 			</main>
 		</>
 	)
 }
+function Loader() {
+	return <p className='message'>Loading...</p>
+}
+function Retry({ getFacts }) {
+	return (
+		<div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+			<p className='message'>
+				😢 Oops, something went wrong, please try again.
+			</p>
+			<button
+				className='btn'
+				style={{ alignSelf: "center", width: "30%" }}
+				onClick={getFacts}
+			>
+				Retry
+			</button>
+		</div>
+	)
+}
+
 const Header = ({ setShowForm, showForm }) => {
 	const appTitle = "Today I Learned"
 
