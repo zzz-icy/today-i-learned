@@ -15,7 +15,7 @@ body {
 	/* otherwise, this will not be overridden by other written after this in this file, e.g. fact-form */
 }
 /* MAIN LAYOUT */
-.container {
+#root {
 	max-width: 1500px;
 	margin: 0 auto;
 }
