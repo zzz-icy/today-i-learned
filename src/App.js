@@ -1,17 +1,21 @@
 import "./style.css"
 import { CATEGORIES } from "./data"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import supabase from "./supabase"
 function App() {
 	const [showForm, setShowForm] = useState(false)
 	const [facts, setFacts] = useState([])
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState(undefined)
-	const getFacts = async () => {
+	const [currentCategory, setCurrentCategory] = useState("all")
+
+	const getFacts = useCallback(async () => {
 		setIsLoading(true)
-		let { data: facts, error } = await supabase
-			.from("facts")
-			.select("*")
+		let query = supabase.from("facts").select("*")
+		if (currentCategory !== "all") {
+			query = query.eq("category", currentCategory)
+		}
+		let { data: facts, error } = await query
 			.order("created_at", { ascending: false })
 			.limit(1000)
 		if (!error) {
@@ -20,10 +24,12 @@ function App() {
 			setError(error)
 		}
 		setIsLoading(false)
-	}
+	}, [currentCategory])
+
 	useEffect(() => {
 		getFacts()
-	}, [])
+	}, [currentCategory, getFacts])
+
 	return (
 		<>
 			{/* HEADER */}
@@ -38,7 +44,7 @@ function App() {
 				/>
 			) : null}
 			<main className='main'>
-				<CategoryFilter />
+				<CategoryFilter setCurrentCategory={setCurrentCategory} />
 				{isLoading ? (
 					<Loader />
 				) : error ? (
@@ -60,7 +66,7 @@ function Retry({ getFacts }) {
 				😢 Oops, something went wrong, please try again.
 			</p>
 			<button
-				className='btn'
+				className='btn btn-category'
 				style={{ alignSelf: "center", width: "30%" }}
 				onClick={getFacts}
 			>
@@ -171,7 +177,7 @@ const NewFactForm = ({ setFacts, setShowForm }) => {
 		</form>
 	)
 }
-const CategoryFilter = () => {
+const CategoryFilter = ({ setCurrentCategory }) => {
 	return (
 		<aside>
 			<ul>
@@ -194,6 +200,7 @@ const CategoryFilter = () => {
 								<button
 									className='btn btn-category'
 									style={{ backgroundColor: item.color }}
+									onClick={() => setCurrentCategory(item.name)}
 								>
 									{item.name}
 								</button>
@@ -207,6 +214,13 @@ const CategoryFilter = () => {
 }
 
 const FactList = ({ facts }) => {
+	if (facts.length === 0) {
+		return (
+			<p className='message'>
+				No facts for this category yet! Create the first one 😺
+			</p>
+		)
+	}
 	return (
 		<section>
 			<ul className='facts-list'>
