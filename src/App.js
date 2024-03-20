@@ -6,6 +6,8 @@ function App() {
 	const [showForm, setShowForm] = useState(false)
 	const [facts, setFacts] = useState([])
 	const [isLoading, setIsLoading] = useState(false)
+	const [isUploading, setIsUploading] = useState(false)
+
 	const [error, setError] = useState(undefined)
 	const [currentCategory, setCurrentCategory] = useState("all")
 
@@ -41,6 +43,8 @@ function App() {
 				<NewFactForm
 					setFacts={setFacts}
 					setShowForm={setShowForm}
+					setIsUploading={setIsUploading}
+					isUploading={isUploading}
 				/>
 			) : null}
 			<main className='main'>
@@ -50,7 +54,10 @@ function App() {
 				) : error ? (
 					<Retry getFacts={getFacts} />
 				) : (
-					<FactList facts={facts} />
+					<FactList
+						facts={facts}
+						setFacts={setFacts}
+					/>
 				)}
 			</main>
 		</>
@@ -113,24 +120,35 @@ function isValidHttpUrl(string) {
 	return url.protocol === "http:" || url.protocol === "https:"
 }
 
-const NewFactForm = ({ setFacts, setShowForm }) => {
+const NewFactForm = ({
+	setFacts,
+	setShowForm,
+	setIsUploading,
+	isUploading,
+}) => {
 	const [text, setText] = useState("")
 	const [source, setSource] = useState("")
 	const [category, setCategory] = useState("")
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault()
 		if (text && isValidHttpUrl(source) && category && text.length <= 200) {
-			const newFact = {
-				text,
-				source,
-				category,
-				id: Math.round(Math.random() * 10000000),
-				votesFalse: 0,
-				votesInteresting: 0,
-				votesMindblowing: 0,
-				createdIn: new Date().getFullYear(),
+			setIsUploading(true)
+			const { data: newFact, error } = await supabase
+				.from("facts")
+				.insert([
+					{
+						text,
+						source,
+						category,
+					},
+				])
+				.select()
+
+			if (!error) {
+				setFacts((facts) => setFacts([newFact[0], ...facts]))
 			}
-			setFacts((facts) => setFacts([newFact, ...facts]))
+			setIsUploading(false)
+
 			setText("")
 			setSource("")
 			setCategory("")
@@ -173,7 +191,12 @@ const NewFactForm = ({ setFacts, setShowForm }) => {
 					)
 				})}
 			</select>
-			<button className='btn btn-large'>Post</button>
+			<button
+				className='btn btn-large'
+				disabled={isUploading}
+			>
+				Post
+			</button>
 		</form>
 	)
 }
@@ -213,8 +236,9 @@ const CategoryFilter = ({ setCurrentCategory }) => {
 	)
 }
 
-const FactList = ({ facts }) => {
-	if (facts.length === 0) {
+const FactList = ({ facts, setFacts }) => {
+	// if (!facts) return null
+	if (facts?.length === 0) {
 		return (
 			<p className='message'>
 				No facts for this category yet! Create the first one 😺
@@ -224,11 +248,12 @@ const FactList = ({ facts }) => {
 	return (
 		<section>
 			<ul className='facts-list'>
-				{facts.map((fact, index) => {
+				{facts?.map((fact, index) => {
 					return (
 						<Fact
-							data={fact}
+							fact={fact}
 							key={fact.id}
+							setFacts={setFacts}
 						/>
 					)
 				})}
@@ -237,14 +262,29 @@ const FactList = ({ facts }) => {
 	)
 }
 
-const Fact = ({ data }) => {
+const Fact = ({ fact, setFacts }) => {
+	const [isUpdating, setIsUpdating] = useState(false)
+	const handleVote = async (voteToUpdate) => {
+		setIsUpdating(true)
+		const { data: updatedFact, error } = await supabase
+			.from("facts")
+			.update({ [voteToUpdate]: fact[voteToUpdate] + 1 })
+			.eq("id", fact.id)
+			.select()
+		setIsUpdating(false)
+		if (!error) {
+			setFacts((facts) =>
+				facts.map((f) => (f.id === fact.id ? updatedFact[0] : f))
+			)
+		}
+	}
 	return (
 		<li className='fact'>
 			<p>
-				{data.text}
+				{fact.text}
 				<a
 					className='source'
-					href={data.source}
+					href={fact.source}
 					target='_blank'
 					rel='noreferrer'
 				>
@@ -255,22 +295,31 @@ const Fact = ({ data }) => {
 				className='tag'
 				style={{
 					backgroundColor: CATEGORIES.find(
-						(category) => category.name === data.category
+						(category) => category.name === fact.category
 					)?.color,
 				}}
 			>
-				{data.category}
+				{fact.category}
 			</span>
 
 			<div className='vote-buttons'>
-				<button>
-					👍 <strong>{data.votesInteresting}</strong>
+				<button
+					onClick={() => handleVote("votesInteresting")}
+					disabled={isUpdating}
+				>
+					👍 <strong>{fact.votesInteresting}</strong>
 				</button>
-				<button>
-					🤯 <strong>{data.votesMindblowing}</strong>
+				<button
+					onClick={() => handleVote("votesMindblowing")}
+					disabled={isUpdating}
+				>
+					🤯 <strong>{fact.votesMindblowing}</strong>
 				</button>
-				<button>
-					⛔️ <strong>{data.votesFalse}</strong>
+				<button
+					onClick={() => handleVote("votesFalse")}
+					disabled={isUpdating}
+				>
+					⛔️ <strong>{fact.votesFalse}</strong>
 				</button>
 			</div>
 		</li>
